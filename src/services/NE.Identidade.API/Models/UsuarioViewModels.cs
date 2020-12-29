@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace NE.Identidade.API.Models
@@ -26,4 +27,24 @@ namespace NE.Identidade.API.Models
         [StringLength(100, ErrorMessage="O campo {0} precisa ter entre {2} e {1} caracteres.", MinimumLength=6)]    
         public string Senha { get; set; }
     }
+
+    public class UsuarioRepostaLogin
+    {
+        public string AccessToken { get; set; }
+        public double ExpireIn { get; set; }
+        public UsuarioToken UsuarioToken { get; set; }
+    }
+
+    public class UsuarioToken
+    {
+        public string Id {get;set;}
+        public string Email { get; set; }
+        public IEnumerable<UsuarioClaim> Claims { get; set; }
+    }
+    public class UsuarioClaim
+    {
+        public string Value {get;set;}
+        public string Type {get;set;}
+    }
+
 }
