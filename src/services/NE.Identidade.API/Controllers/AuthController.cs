@@ -11,11 +11,10 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
 
-namespace NE.Identidade.API.Controlles
+namespace NE.Identidade.API.Controllers
 {
-    [ApiController]
     [Route("api/identidade")]
-    public class AuthController : Controller
+    public class AuthController : MainController
     {
         private readonly SignInManager<IdentityUser> _signInManager;
         private readonly UserManager<IdentityUser> _userManager;
@@ -30,7 +29,7 @@ namespace NE.Identidade.API.Controlles
         [HttpPost("nova-conta")]
         public async Task<ActionResult> Registrar(UsuarioRegistro usuarioRegistro)
         {
-            if(!ModelState.IsValid) return BadRequest();
+            if(!ModelState.IsValid) return CustomResponse(ModelState);
 
             var user = new IdentityUser
             {
@@ -41,28 +40,36 @@ namespace NE.Identidade.API.Controlles
 
             var result = await _userManager.CreateAsync(user, usuarioRegistro.Senha);
 
-            if(result.Succeeded)
+            if(result.Succeeded) return CustomResponse(await GerarJwt(usuarioRegistro.Email));
+
+            foreach(var erro in result.Errors)
             {
-                await _signInManager.SignInAsync(user, false);
-                return Ok(await GerarJwt(usuarioRegistro.Email));
+                AdicionaErroProcessamento(erro.Description);
             }
 
-            return BadRequest();
+            return CustomResponse();
         }
 
         [HttpPost("Autenticar")]
          public async Task<ActionResult> Login(UsuarioLogin usuarioLogin)
         {
 
-            if(!ModelState.IsValid) return BadRequest();
+            if(!ModelState.IsValid) return CustomResponse(ModelState);
             var result = await _signInManager.PasswordSignInAsync(usuarioLogin.Email, usuarioLogin.Senha, false, true);
 
             if(result.Succeeded)
             {
-                return Ok(await GerarJwt(usuarioLogin.Email));
+                return CustomResponse(await GerarJwt(usuarioLogin.Email));
             }
 
-            return BadRequest();
+            if(result.IsLockedOut)
+            {
+                AdicionaErroProcessamento("Usuário bloqueado por tentativas inválidas.");
+                return CustomResponse();
+            }
+            
+            AdicionaErroProcessamento("Usuário ou senha incorretos.");
+            return CustomResponse();
 
         }
 
