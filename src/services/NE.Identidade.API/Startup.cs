@@ -38,6 +38,7 @@ namespace NE.Identidade.API
             //Identity
             services.AddDefaultIdentity<IdentityUser>()
                     .AddRoles<IdentityRole>()
+                    .AddErrorDescriber<IdentityMensagensPortugues>()
                     .AddEntityFrameworkStores<ApplicationDbContext>()
                     .AddDefaultTokenProviders();
 
